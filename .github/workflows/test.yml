@@ -1,0 +1,17 @@
+name: Test
+
+on: [pull_request, push]
+
+jobs:
+  build:
+    name: Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Generate compilation database
+      run: cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 tests
+
+    - name: Run Include What You Use
+      uses: ./
