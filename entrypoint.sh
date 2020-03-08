@@ -1,16 +1,17 @@
 #!/bin/sh
-
 COMPILATIONDB="$1"
 FORMAT="$2"
 PATTERN=""
-WORKDIR="$GITHUB_WORKSPACE/$COMPILATIONDB"
+LOGFILE="$(mktemp)"
+REPO="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f2)"
+ORIGINALDIR="$RUNNER_WORKSPACE/$REPO"
 
 case "$FORMAT" in
     clang)
-        PATTERN="/note: #includes\/fwd-decls are correct/d"
+        PATTERN="/note: #includes\\/fwd-decls are correct/d"
         ;;
     iwyu)
-        PATTERN="/ has correct #includes\/fwd-decl/d;1d"
+        PATTERN="/ has correct #includes\\/fwd-decl/d"
         ;;
     *)
         echo Unknown output format!
@@ -19,22 +20,25 @@ case "$FORMAT" in
         ;;
 esac
 
-if [ ! -d "$WORKDIR" ]; then
-    echo Directory containing compilation database not found!
-    echo Github workspace: "$GITHUB_WORKSPACE"
-    echo Compilation database path: "$COMPILATIONDB"
-    echo Full path: "$WORKDIR"
-    exit 1
-fi
+# /home/runner does not exist in the Docker image
+mkdir -p "$RUNNER_WORKSPACE"
 
-if [ ! -f "$WORKDIR/compile_commands.json" ]; then
+# Use same path as outside the image since the compilation database
+# might contain absolute path's
+ln -s "$GITHUB_WORKSPACE" "$ORIGINALDIR"
+
+if [ ! -f "$ORIGINALDIR/$COMPILATIONDB/compile_commands.json" ]; then
     echo No compilation database found!
-    echo Expected \""$WORKDIR"\" to contain \"compile_commands.json\"
-    echo Github workspace: "$GITHUB_WORKSPACE"
+    echo Expected \""$ORIGINALDIR/$COMPILATIONDB"\" to contain \"compile_commands.json\"
     echo Compilation database path: "$COMPILATIONDB"
-    echo Working directory contents:
-    ls -lah "$WORKDIR"
+    echo Directory contents:
+    ls -lah "$ORIGINALDIR/$COMPILATIONDB"
     exit 1
 fi
 
-iwyu_tool.py -o "$FORMAT" -p "$COMPILATIONDB" | sed "$FORMAT" | cat -s | tee /tmp/iwyu-output.txt
+cd "$ORIGINALDIR"
+python /usr/local/bin/iwyu_tool.py -o "$FORMAT" -p "$COMPILATIONDB" | sed "$PATTERN" | cat -s | tee "$LOGFILE"
+
+if [[ "$(sed -E '/^(---)?$/d' "$LOGFILE" | wc -l)" > 1 ]]; then
+    exit 1;
+fi
