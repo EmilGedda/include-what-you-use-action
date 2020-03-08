@@ -1,0 +1,18 @@
+# action.yml
+name: 'include what you use'
+description: 'Run include what you use on your code'
+inputs:
+  compilation-database-path:
+    description: 'Compilation database path'
+    required: false
+    default: '.'
+  output-format:
+    description: 'Output format'
+    required: false
+    default: 'iwyu'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.compilation-database-path }}
+    - ${{ inputs.output-format }}
