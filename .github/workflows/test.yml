@@ -15,3 +15,5 @@ jobs:
 
     - name: Run Include What You Use
       uses: ./
+      with:
+        no-error: 'true'

@@ -3,16 +3,21 @@ name: 'include what you use'
 description: 'Run include what you use on your code'
 inputs:
   compilation-database-path:
-    description: 'Compilation database path'
+    description: 'Relative path to directory containing the compilation database'
     required: false
     default: '.'
   output-format:
-    description: 'Output format'
+    description: 'Output format of the include suggestions (clang|iwyu)'
     required: false
     default: 'iwyu'
+  no-error:
+    description: 'The action succeeds regardless if there are include suggestions or not'
+    required: false
+    default: 'false'
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
     - ${{ inputs.compilation-database-path }}
     - ${{ inputs.output-format }}
+    - ${{ inputs.no-error }}
