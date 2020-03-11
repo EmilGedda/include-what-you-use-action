@@ -1,5 +1,8 @@
-# action.yml
-name: 'include what you use'
+name: 'include what you use Github action'
+author: 'Emil Gedda'
+branding:
+  icon: 'align-left'
+  color: 'blue'
 description: 'Run include what you use on your code'
 inputs:
   compilation-database-path:
@@ -16,7 +19,7 @@ inputs:
     default: 'false'
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'docker://gedda/include-what-you-use-action:1.0'
   args:
     - ${{ inputs.compilation-database-path }}
     - ${{ inputs.output-format }}
